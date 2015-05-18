@@ -1,11 +1,16 @@
 # Piece class defines a piece in general
 class Piece
   attr_accessor :location
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
+  end
+
+  def piece_color
+    @color
   end
 
   # Calculates possible moves based on possible_directions and reach.
@@ -71,8 +76,9 @@ end
 
 
 class Pawn < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 1
     @possible_directions = [:north]
   end
@@ -80,8 +86,9 @@ end
 
 
 class Knight < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
   end
 
   def possible_moves
@@ -92,8 +99,9 @@ end
 
 
 class Bishop < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 7
     @possible_directions = [:northeast, :northwest,
                             :southeast, :southwest]
@@ -102,8 +110,9 @@ end
 
 
 class Rook < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west]
   end
@@ -111,8 +120,9 @@ end
 
 
 class Queen < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
@@ -121,8 +131,9 @@ end
 
 
 class King < Piece
-  def initialize(location = [0, 0])
+  def initialize(location = [0, 0], color = :black)
     @location = location
+    @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
