@@ -9,6 +9,14 @@ class Piece
                             :northeast, :northwest, :southeast, :southwest]
   end
 
+  def eql?(other)
+    (self.class == other.class) && (@color == other.piece_color)
+  end
+
+  def ==(other)
+    self.eql?(other)
+  end
+
   # Color instance variable getter method
   def piece_color
     @color
