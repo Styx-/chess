@@ -9,11 +9,12 @@ class Piece
                             :northeast, :northwest, :southeast, :southwest]
   end
 
+  # Color instance variable getter method
   def piece_color
     @color
   end
 
-  # Calculates possible moves based on possible_directions and reach.
+  # Calculates possible moves based on possible_directions and reach
   def possible_moves
     moves = []
     @reach.downto(-@reach) {|num| moves << num}
@@ -74,7 +75,7 @@ class Piece
   end
 end
 
-
+# Pawn Class inherits Piece Class
 class Pawn < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
@@ -84,20 +85,21 @@ class Pawn < Piece
   end
 end
 
-
+# Knight Class inherits Piece Class
 class Knight < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
   end
 
+# Knight's movements are different from other pieces
   def possible_moves
     moves = [[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]]
     apply_location(moves)
   end
 end
 
-
+# Bishop Class inherits Piece Class
 class Bishop < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
@@ -108,7 +110,7 @@ class Bishop < Piece
   end
 end
 
-
+# Rook Class inherits Piece Class
 class Rook < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
@@ -118,7 +120,7 @@ class Rook < Piece
   end
 end
 
-
+# Queen Class inherits Piece Class
 class Queen < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
@@ -129,7 +131,7 @@ class Queen < Piece
   end
 end
 
-
+# King Class inherits Piece Class
 class King < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
