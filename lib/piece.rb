@@ -1,12 +1,14 @@
 # Piece class defines a piece in general
 class Piece
   attr_accessor :location
+  attr_reader :color, :piece
   def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
+    @piece = ''
   end
 
   def eql?(other)
@@ -15,11 +17,6 @@ class Piece
 
   def ==(other)
     self.eql?(other)
-  end
-
-  # Color instance variable getter method
-  def piece_color
-    @color
   end
 
   # Calculates possible moves based on possible_directions and reach
@@ -90,6 +87,7 @@ class Pawn < Piece
     @color = color
     @reach = 1
     @possible_directions = [:north]
+    @piece = "\u265f"
   end
 end
 
@@ -98,6 +96,7 @@ class Knight < Piece
   def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
+    @piece = "\u265e"
   end
 
 # Knight's movements are different from other pieces
@@ -115,6 +114,7 @@ class Bishop < Piece
     @reach = 7
     @possible_directions = [:northeast, :northwest,
                             :southeast, :southwest]
+    @piece = "\u265d"
   end
 end
 
@@ -125,6 +125,7 @@ class Rook < Piece
     @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west]
+    @piece = "\u265c"
   end
 end
 
@@ -136,6 +137,7 @@ class Queen < Piece
     @reach = 7
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
+    @piece = "\u265b"
   end
 end
 
@@ -147,5 +149,6 @@ class King < Piece
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
+    @piece = "\u265a"
   end
 end
