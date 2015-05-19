@@ -1,4 +1,3 @@
-require './piece'
 require 'colored'
 
 class Board
@@ -8,53 +7,48 @@ class Board
   end
 
   def display_board
-    7.downto(0) { |line| display_line(line) }
+    7.downto(0) do |line|
+      display_even_line(line) if line.even?
+      display_odd_line(line) if line.odd?
+    end
   end
 
-  def display_line(line)
-    0.upto(7) { |cell| display_cell(cell, line) }
+  def display_even_line(line)
+    return unless line.even?
+    0.upto(7) do |cell|
+      if @board[line][cell].nil?
+        print "   ".black_on_blue if cell.even?
+        print "   ".black_on_green if cell.odd?
+      else
+        if @board[line][cell].color == :black
+          print " #{@board[line][cell].piece} ".black_on_blue if cell.even?
+          print " #{@board[line][cell].piece} ".black_on_green if cell.odd?
+         else
+          print " #{@board[line][cell].piece} ".white_on_blue if cell.even?
+          print " #{@board[line][cell].piece} ".white_on_green if cell.odd?
+        end
+      end
+    end
     print "\n"
   end
 
-  def display_cell(cell, line)
-    return if @board[line].nil?
-    if line.even?
-      display_even_line(line, cell)
-    else
-      display_odd_line(line, cell)
-    end
-  end
-
-  def display_even_line(line, cell)
-    return unless line.even?
-    if @board[line][cell]
-      print "   ".black_on_blue if cell.even?
-      print "   ".black_on_green if cell.odd?
-    else
-      if @board[line][cell].color == :black
-        print " #{@board[line][cell].piece} ".black_on_blue if cell.even?
-        print " #{@board[line][cell].piece} ".black_on_green if cell.odd?
-       else
-        print " #{@board[line][cell].piece} ".white_on_blue if cell.even?
-        print " #{@board[line][cell].piece} ".white_on_green if cell.odd?
-      end
-    end
-  end
-
-  def display_odd_line(line, cell)
+  def display_odd_line(line)
     return unless line.odd?
-    if @board[line][cell].nil?
-        print "   ".black_on_green if cell.even?
-        print "   ".black_on_blue if cell.odd?
-    else
-      if @board[line][cell].color == :black
-        print " #{@board[line][cell].piece} ".black_on_green if cell.even?
-        print " #{@board[line][cell].piece} ".black_on_blue if cell.odd?
+    0.upto(7) do |cell|
+      if @board[line][cell].nil?
+          print "   ".black_on_green if cell.even?
+          print "   ".black_on_blue if cell.odd?
       else
-        print " #{@board[line][cell].piece} ".white_on_green if cell.even?
-        print " #{@board[line][cell].piece} ".white_on_blue if cell.odd?
+        if @board[line][cell].color == :black
+          print " #{@board[line][cell].piece} ".black_on_green if cell.even?
+          print " #{@board[line][cell].piece} ".black_on_blue if cell.odd?
+        else
+          print " #{@board[line][cell].piece} ".white_on_green if cell.even?
+          print " #{@board[line][cell].piece} ".white_on_blue if cell.odd?
+        end
       end
     end
+    print "\n"
   end
 
   def empty_board
@@ -114,8 +108,3 @@ class Board
     end
   end
 end
-
-board = Board.new
-board.set_board
-puts board.board[0].inspect
-board.display_board
