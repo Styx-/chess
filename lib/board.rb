@@ -114,10 +114,3 @@ class Board
     end
   end
 end
-
-board = Board.new
-
-board.display_board
-board.set_board
-puts 
-board.display_board
