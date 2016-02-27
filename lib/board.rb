@@ -1,20 +1,31 @@
 require 'colored'
 
 class Board
-  attr_reader :board
+  #attr_reader :board
+  attr_accessor :board
   def initialize(board = empty_board)
     @board = board
+    set_board
+  end
+
+  def empty_board
+    Array.new(8) { Array.new(8) }
   end
 
   def display_board
+    puts '  0  1  2  3  4  5  6  7'
     7.downto(0) do |line|
+      print line
       display_even_line(line) if line.even?
       display_odd_line(line) if line.odd?
     end
   end
 
+  def piece_at(row, column)
+    @board[row][column]
+  end
+
   def display_even_line(line)
-    return unless line.even?
     0.upto(7) do |cell|
       if @board[line][cell].nil?
         print "   ".black_on_blue if cell.even?
@@ -33,7 +44,6 @@ class Board
   end
 
   def display_odd_line(line)
-    return unless line.odd?
     0.upto(7) do |cell|
       if @board[line][cell].nil?
           print "   ".black_on_green if cell.even?
@@ -51,20 +61,16 @@ class Board
     print "\n"
   end
 
-  def empty_board
-    Array.new(8) { Array.new(8) }
-  end
-
   def set_board
     set_pawns
     set_nobles
   end
 
   def set_pawns
-    @board[1].each_with_index do |cell, index|
+    @board[1].each_index do |index|
       @board[1][index] = Pawn.new([1, index], :white)
     end
-    @board[6].each_with_index do |cell, index|
+    @board[6].each_index do |index|
       @board[6][index] = Pawn.new([6, index], :black)
     end
   end
@@ -75,7 +81,7 @@ class Board
   end
 
   def set_white_nobles
-    @board[0].each_with_index do |cell, index|
+    @board[0].each_index do |index|
       case index
       when 0, 7
         @board[0][index] = Rook.new([0, index], :white)
@@ -92,7 +98,7 @@ class Board
   end
 
   def set_black_nobles
-    @board[7].each_with_index do |cell, index|
+    @board[7].each_index do |index|
       case index
       when 0, 7
         @board[7][index] = Rook.new([7, index], :black)
@@ -108,3 +114,10 @@ class Board
     end
   end
 end
+
+board = Board.new
+
+board.display_board
+board.set_board
+puts 
+board.display_board
