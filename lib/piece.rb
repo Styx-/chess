@@ -2,13 +2,14 @@
 class Piece
   attr_accessor :location
   attr_reader :color, :piece
-  def initialize(location = [0, 0], color = :black)
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = ''
+    @board = board
   end
 
   def eql?(other)
@@ -19,6 +20,10 @@ class Piece
     self.eql?(other)
   end
 
+  def occupied_targets
+    @board.occupied_targets
+  end
+
   # Calculates possible moves based on possible_directions and reach
   def possible_moves
     moves = []
@@ -27,8 +32,42 @@ class Piece
     moves = apply_directions(moves)
     moves = apply_location(moves)
     moves = apply_board_limits(moves)
+    moves = apply_relative_pieces(moves)
   end
 
+  def possible_moves_without_relatives
+    moves = []
+    @reach.downto(-@reach) {|num| moves << num}
+    moves = moves.repeated_permutation(2).to_a
+    moves = apply_directions(moves)
+    moves = apply_location(moves)
+    moves = apply_board_limits(moves)
+  end
+
+  def apply_relative_pieces(moves)
+    moves_to_delete = []
+    moves.each do |target|
+      moves_to_delete << target if (occupied_targets.include?(target)) && (not reachable_enemy?(target))
+    end
+    moves.each do |target|
+      moves_to_delete.each do |to_delete|
+        moves_to_delete << target if further_than?(to_delete, target, @location)
+      end
+    end
+    moves.delete_if { |move| moves_to_delete.include?(move) }
+  end
+
+  def reachable_enemy?(target)
+    return false if @board.piece_at(target[0], target[1]).nil?
+    return false if @board.piece_at(target[0], target[1]).color == @color
+    occupied_targets.each do |occ_target|
+      return false if further_than?(occ_target, target, @location)
+    end
+    return false unless possible_moves_without_relatives.include?(target)
+    true
+  end
+
+  # Discards moves that are not possible on an 8 by 8 board.
   def apply_board_limits(moves)
     moves.delete_if do |move|
       move[0] < 0 ||
@@ -58,6 +97,69 @@ class Piece
     moves.delete_if { |move| southeastern_move?(move) } unless can_move_southeast?
     moves.delete_if { |move| southwestern_move?(move) } unless can_move_southwest?
     moves
+  end
+
+  def same_direction?(first_target, second_target, relation)
+    return true if north_of?(first_target, relation) && north_of?(second_target, relation)
+    return true if south_of?(first_target, relation) && south_of?(second_target, relation)
+    return true if east_of?(first_target, relation) && east_of?(second_target, relation)
+    return true if west_of?(first_target, relation) && west_of?(second_target, relation)
+    return true if northeast_of?(first_target, relation) && northeast_of?(second_target, relation)
+    return true if northwest_of?(first_target, relation) && northwest_of?(second_target, relation)
+    return true if southeast_of?(first_target, relation) && southeast_of?(second_target, relation)
+    return true if southwest_of?(first_target, relation) && southwest_of?(second_target, relation)
+    false
+  end
+
+  def further_than?(first_target, second_target, relation)
+    return false if not same_direction?(first_target, second_target, relation)
+    return true if north_of?(first_target, relation) && (north_of?(second_target, first_target))
+    return true if south_of?(first_target, relation) && (south_of?(second_target, first_target))
+    return true if west_of?(first_target, relation) && (west_of?(second_target, first_target))
+    return true if east_of?(first_target, relation) && (east_of?(second_target, first_target))
+    return true if northeast_of?(first_target, relation) && (northeast_of?(second_target, first_target))
+    return true if northwest_of?(first_target, relation) && (northwest_of?(second_target, first_target))
+    return true if southeast_of?(first_target, relation) && (southeast_of?(second_target, first_target))
+    return true if southwest_of?(first_target, relation) && (southwest_of?(second_target, first_target))
+    false
+  end
+
+  def diagonal_of?(target, current)
+    (target[0] - current[0]) == (target[1] - current[1]) ||
+    (target[0] - current[0]) * -1 == (target[1] - current[1])
+  end
+
+  def north_of?(target, current)
+    target[0] > current[0] && target[1] == current[1]
+  end
+
+  def south_of?(target, current)
+    target[0] < current[0] && target[1] == current[1]
+  end
+
+  def east_of?(target, current)
+    target[1] > current[1] && target[0] == current[0]
+  end
+
+  def west_of?(target, current)
+    target[1] < current[1] && target[0] == current[0]
+  end
+
+  def northeast_of?(target, current)
+    diagonal_of?(target, current) &&
+    target[0] > current[0] && target[1] > current[1]
+  end
+
+  def northwest_of?(target, current)
+    diagonal_of?(target, current) && target[0] > current[0] && target[1] < current[1]
+  end
+
+  def southeast_of?(target, current)
+    diagonal_of?(target, current) && target[0] < current[0] && target[1] > current[1]
+  end
+
+  def southwest_of?(target, current)
+    diagonal_of?(target, current) && target[0] < current[0] && target[1] < current[1]
   end
 
   def cardinal_move?(move)
@@ -131,21 +233,24 @@ end
 
 # Pawn Class inherits Piece Class
 class Pawn < Piece
-  def initialize(location = [0, 0], color = :black)
+  attr_reader :board
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north]
     @piece = "\u265f"
+    @board = board
   end
 end
 
 # Knight Class inherits Piece Class
 class Knight < Piece
-  def initialize(location = [0, 0], color = :black)
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @piece = "\u265e"
+    @board = board
   end
 
 # Knight's movements are different from other pieces
@@ -157,47 +262,52 @@ end
 
 # Bishop Class inherits Piece Class
 class Bishop < Piece
-  def initialize(location = [0, 0], color = :black)
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:northeast, :northwest,
                             :southeast, :southwest]
     @piece = "\u265d"
+    @board = board
   end
 end
 
 # Rook Class inherits Piece Class
 class Rook < Piece
-  def initialize(location = [0, 0], color = :black)
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west]
     @piece = "\u265c"
+    @board = board
   end
 end
 
 # Queen Class inherits Piece Class
 class Queen < Piece
-  def initialize(location = [0, 0], color = :black)
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = "\u265b"
+    @board = board
   end
 end
 
 # King Class inherits Piece Class
 class King < Piece
-  def initialize(location = [0, 0], color = :black)
+  attr_reader :board
+  def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = "\u265a"
+    @board = board
   end
 end

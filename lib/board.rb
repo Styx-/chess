@@ -21,6 +21,16 @@ class Board
     end
   end
 
+  def occupied_targets
+    occupied_targets = []
+    0.upto(7).each do |row|
+      0.upto(7).each do |column|
+        occupied_targets << [row, column] if not @board[row][column].nil?
+      end
+    end
+    occupied_targets
+  end
+
   def piece_at(row, column)
     @board[row][column]
   end
@@ -68,10 +78,10 @@ class Board
 
   def set_pawns
     @board[1].each_index do |index|
-      @board[1][index] = Pawn.new([1, index], :white)
+      @board[1][index] = Pawn.new([1, index], :white, @board)
     end
     @board[6].each_index do |index|
-      @board[6][index] = Pawn.new([6, index], :black)
+      @board[6][index] = Pawn.new([6, index], :black, @board)
     end
   end
 
@@ -84,15 +94,15 @@ class Board
     @board[0].each_index do |index|
       case index
       when 0, 7
-        @board[0][index] = Rook.new([0, index], :white)
+        @board[0][index] = Rook.new([0, index], :white, @board)
       when 1, 6
-        @board[0][index] = Knight.new([0, index], :white)
+        @board[0][index] = Knight.new([0, index], :white, @board)
       when 2, 5
-        @board[0][index] = Bishop.new([0, index], :white)
+        @board[0][index] = Bishop.new([0, index], :white, @board)
       when 3
-        @board[0][3] = Queen.new([0, 3], :white)
+        @board[0][3] = Queen.new([0, 3], :white, @board)
       when 4
-        @board[0][4] = King.new([0, 4], :white)
+        @board[0][4] = King.new([0, 4], :white, @board)
       end
     end
   end
@@ -101,15 +111,15 @@ class Board
     @board[7].each_index do |index|
       case index
       when 0, 7
-        @board[7][index] = Rook.new([7, index], :black)
+        @board[7][index] = Rook.new([7, index], :black, @board)
       when 1, 6
-        @board[7][index] = Knight.new([7, index], :black)
+        @board[7][index] = Knight.new([7, index], :black, @board)
       when 2, 5
-        @board[7][index] = Bishop.new([7, index], :black)
+        @board[7][index] = Bishop.new([7, index], :black, @board)
       when 3
-        @board[7][3] = Queen.new([7, 3], :black)
+        @board[7][3] = Queen.new([7, 3], :black, @board)
       when 4
-        @board[7][4] = King.new([7, 4], :black)
+        @board[7][4] = King.new([7, 4], :black, @board)
       end
     end
   end
