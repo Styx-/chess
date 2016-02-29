@@ -21,6 +21,10 @@ class Board
     end
   end
 
+  def space_equals(row, col, data)
+    @board[row][col] = data
+  end
+
   def occupied_targets
     occupied_targets = []
     0.upto(7).each do |row|

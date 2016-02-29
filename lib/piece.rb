@@ -20,6 +20,15 @@ class Piece
     self.eql?(other)
   end
 
+  def move_to(row, col)
+    move = [row, col]
+    current_piece = @board.piece_at(location[0], location[1])
+    return nil unless possible_moves.include?(move)
+    @board.space_equals(row, col, current_piece)
+    @board.space_equals(current_piece.location[0], current_piece.location[1], nil)
+    current_piece.location = [row, col]
+  end
+
   def occupied_targets
     @board.occupied_targets
   end
@@ -65,6 +74,11 @@ class Piece
     end
     return false unless possible_moves_without_relatives.include?(target)
     true
+  end
+
+  def enemy_of?(other_piece)
+    return false if other_piece.nil?
+    @color != other_piece.color
   end
 
   # Discards moves that are not possible on an 8 by 8 board.
@@ -234,6 +248,7 @@ end
 # Pawn Class inherits Piece Class
 class Pawn < Piece
   attr_reader :board
+  attr_accessor :row_loc, :col_loc
   def initialize(location = [0, 0], color = :black, board)
     @location = location
     @color = color
@@ -241,6 +256,42 @@ class Pawn < Piece
     @possible_directions = [:north]
     @piece = "\u265f"
     @board = board
+    @row_loc = @location[0]
+    @col_loc = @location[1]
+    @has_moved = false
+  end
+
+  def possible_moves
+    moves = []
+    northern_space = @board.piece_at((@row_loc + 1), @col_loc)
+    northeastern_space = @board.piece_at((@row_loc + 1), (@col_loc + 1))
+    northwestern_space = @board.piece_at((@row_loc + 1), (@col_loc - 1))
+    current_piece = @board.piece_at(@row_loc, @col_loc)
+    if northern_space.nil?
+      moves << [(@row_loc + 1), (@col_loc)]
+    end
+    if (!northeastern_space.nil?) && northeastern_space.enemy_of?(current_piece)
+      moves << northeastern_space.location
+    end
+    if (!northwestern_space.nil?) && northwestern_space.enemy_of?(current_piece)
+      moves << northwestern_space.location
+    end
+    if (!@has_moved) && (@board.piece_at((@row_loc + 2), (@col_loc)).nil?)
+      moves << [(@row_loc + 2), (@col_loc)]
+    end
+    moves
+  end
+
+  def move_to(row, col)
+    move = [row, col]
+    current_piece = @board.piece_at(location[0], location[1])
+    return nil unless possible_moves.include?(move)
+    @has_moved = true
+    @board.space_equals(row, col, current_piece)
+    @board.space_equals(current_piece.location[0], current_piece.location[1], nil)
+    current_piece.location = [row, col]
+    current_piece.row_loc = row
+    current_piece.col_loc = col
   end
 end
 
@@ -256,7 +307,9 @@ class Knight < Piece
 # Knight's movements are different from other pieces
   def possible_moves
     moves = [[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]]
-    apply_location(moves)
+    moves = apply_location(moves)
+    moves = apply_board_limits(moves)
+    moves = apply_relative_pieces(moves)
   end
 end
 

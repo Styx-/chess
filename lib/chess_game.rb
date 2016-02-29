@@ -3,13 +3,14 @@ require_relative "board.rb"
 
 board = Board.new
 
-board.board[4][3] = Queen.new([4, 3], :white, board)
+board.board[2][3] = Knight.new([2, 3], :white, board)
 
-Queen = board.piece_at(4, 3)
+knight = board.piece_at(2, 3)
 
 board.display_board
 
-puts Queen.possible_moves.inspect
+puts knight.possible_moves.inspect
+
 
 #Okay, so I need to search through a given piece's possible moves for 'targets' that other pieces occupy. If a target is already occupied, remove that target and any others that match that target's 'direction' and are farther than that target.
 
