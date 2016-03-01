@@ -1,15 +1,20 @@
 # Piece class defines a piece in general
 class Piece
-  attr_accessor :location
+  attr_accessor :location, :board
   attr_reader :color, :piece
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = ''
-    @board = board
+    @board = nil
+  end
+
+  def my_king
+    return @board.black_king if @color == :black
+    return @board.white_king if @color == :white
   end
 
   def eql?(other)
@@ -33,6 +38,12 @@ class Piece
     @board.occupied_targets
   end
 
+  def enemies_of(piece)
+    occupied_targets.map do |target|
+      @board.piece_at(target[0], target[1])
+    end.select { |target| target.enemy_of?(piece) }
+  end
+
   # Calculates possible moves based on possible_directions and reach
   def possible_moves
     moves = []
@@ -42,6 +53,7 @@ class Piece
     moves = apply_location(moves)
     moves = apply_board_limits(moves)
     moves = apply_relative_pieces(moves)
+    moves.delete_if { |move| checkable_move?(move[0], move[1]) }
   end
 
   def possible_moves_without_relatives
@@ -136,6 +148,22 @@ class Piece
     return true if southeast_of?(first_target, relation) && (southeast_of?(second_target, first_target))
     return true if southwest_of?(first_target, relation) && (southwest_of?(second_target, first_target))
     false
+  end
+
+  def checkable_move?(row, col)
+    move = [row, col]
+    previous_loc = @location
+    checkable = false
+    current_piece = @board.piece_at(location[0], location[1])
+    enemy_piece = @board.piece_at(row, col) unless @board.piece_at(row, col).nil?
+    @board.space_equals(row, col, current_piece)
+    @board.space_equals(current_piece.location[0], current_piece.location[1], nil)
+    current_piece.location = [row, col]
+    checkable = my_king.check?
+    current_piece.location = previous_loc
+    @board.space_equals(current_piece.location[0], current_piece.location[1], current_piece)
+    @board.space_equals(row, col, enemy_piece)
+    checkable
   end
 
   def diagonal_of?(target, current)
@@ -247,15 +275,14 @@ end
 
 # Pawn Class inherits Piece Class
 class Pawn < Piece
-  attr_reader :board
-  attr_accessor :row_loc, :col_loc
-  def initialize(location = [0, 0], color = :black, board)
+  attr_accessor :row_loc, :col_loc, :board
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north]
     @piece = "\u265f"
-    @board = board
+    @board = nil
     @row_loc = @location[0]
     @col_loc = @location[1]
     @has_moved = false
@@ -263,12 +290,24 @@ class Pawn < Piece
 
   def possible_moves
     moves = []
-    northern_space = @board.piece_at((@row_loc + 1), @col_loc)
-    northeastern_space = @board.piece_at((@row_loc + 1), (@col_loc + 1))
-    northwestern_space = @board.piece_at((@row_loc + 1), (@col_loc - 1))
+    if @color == :black
+      two_in_front = @board.piece_at((@location[0] - 2), @location[1])
+      northern_space = @board.piece_at((@row_loc - 1), @col_loc)
+      northeastern_space = @board.piece_at((@row_loc - 1), (@col_loc - 1))
+      northwestern_space = @board.piece_at((@row_loc - 1), (@col_loc + 1))
+    else
+      two_in_front = @board.piece_at((@row_loc + 2), @col_loc)
+      northern_space = @board.piece_at((@row_loc + 1), @col_loc)
+      northeastern_space = @board.piece_at((@row_loc + 1), (@col_loc + 1))
+      northwestern_space = @board.piece_at((@row_loc + 1), (@col_loc - 1))
+    end
+    
     current_piece = @board.piece_at(@row_loc, @col_loc)
-    if northern_space.nil?
+    if northern_space.nil? && @color == :white
       moves << [(@row_loc + 1), (@col_loc)]
+    end
+    if northern_space.nil? && @color == :black
+      moves << [(@row_loc - 1), (@col_loc)]
     end
     if (!northeastern_space.nil?) && northeastern_space.enemy_of?(current_piece)
       moves << northeastern_space.location
@@ -276,7 +315,10 @@ class Pawn < Piece
     if (!northwestern_space.nil?) && northwestern_space.enemy_of?(current_piece)
       moves << northwestern_space.location
     end
-    if (!@has_moved) && (@board.piece_at((@row_loc + 2), (@col_loc)).nil?)
+    if (!@has_moved) && (two_in_front).nil? && (@color == :black)
+      moves << [(@row_loc - 2), (@col_loc)]
+    end
+    if (!@has_moved) && (two_in_front).nil? && (@color == :white)
       moves << [(@row_loc + 2), (@col_loc)]
     end
     moves
@@ -297,11 +339,11 @@ end
 
 # Knight Class inherits Piece Class
 class Knight < Piece
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @piece = "\u265e"
-    @board = board
+    @board = nil
   end
 
 # Knight's movements are different from other pieces
@@ -311,56 +353,123 @@ class Knight < Piece
     moves = apply_board_limits(moves)
     moves = apply_relative_pieces(moves)
   end
+
+  def apply_relative_pieces(moves)
+    moves.delete_if { |move| occupied_targets.include?(move) }
+  end
 end
 
 # Bishop Class inherits Piece Class
 class Bishop < Piece
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:northeast, :northwest,
                             :southeast, :southwest]
     @piece = "\u265d"
-    @board = board
+    @board = nil
   end
 end
 
 # Rook Class inherits Piece Class
 class Rook < Piece
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west]
     @piece = "\u265c"
-    @board = board
+    @board = nil
   end
 end
 
 # Queen Class inherits Piece Class
 class Queen < Piece
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 7
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = "\u265b"
-    @board = board
+    @board = nil
   end
 end
 
 # King Class inherits Piece Class
 class King < Piece
   attr_reader :board
-  def initialize(location = [0, 0], color = :black, board)
+  def initialize(location = [0, 0], color = :black)
     @location = location
     @color = color
     @reach = 1
     @possible_directions = [:north, :south, :east, :west,
                             :northeast, :northwest, :southeast, :southwest]
     @piece = "\u265a"
-    @board = board
+    @board = nil
+  end
+
+  def possible_moves
+    moves = []
+    @reach.downto(-@reach) {|num| moves << num}
+    moves = moves.repeated_permutation(2).to_a
+    moves = apply_directions(moves)
+    moves = apply_location(moves)
+    moves = apply_board_limits(moves)
+    moves = apply_relative_pieces(moves)
+    moves.delete_if do |move|
+      checkable_move?(move[0], move[1])
+    end
+  end
+
+  def my_enemies
+    me = @board.piece_at(@location[0], @location[1])
+    enemies_of(me)
+  end
+
+  def check?
+    my_enemies.each do |enemy|
+      if enemy.possible_moves.include?(@location)
+        return true
+      end
+    end
+    false
+  end
+
+  def checkmate?
+    return false if !check?
+    possible_moves.each do |move|
+      return false if !checkable_move?(move[0], move[1])
+    end
+    true
+  end
+
+  def move_to(row, col)
+    move = [row, col]
+    current_piece = @board.piece_at(location[0], location[1])
+    return nil unless possible_moves.include?(move)
+    return nil if checkable_move?(row, col)
+    @board.space_equals(row, col, current_piece)
+    @board.space_equals(current_piece.location[0], current_piece.location[1], nil)
+    current_piece.location = [row, col]
+    current_piece.row_loc = row
+    current_piece.col_loc = col
+  end
+
+  def checkable_move?(row, col)
+    move = [row, col]
+    previous_loc = @location
+    checkable = false
+    current_piece = @board.piece_at(location[0], location[1])
+    enemy_piece = @board.piece_at(row, col) unless @board.piece_at(row, col).nil?
+    @board.space_equals(row, col, current_piece)
+    @board.space_equals(current_piece.location[0], current_piece.location[1], nil)
+    current_piece.location = [row, col]
+    checkable = current_piece.check?
+    current_piece.location = previous_loc
+    @board.space_equals(current_piece.location[0], current_piece.location[1], current_piece)
+    @board.space_equals(row, col, enemy_piece)
+    checkable
   end
 end
